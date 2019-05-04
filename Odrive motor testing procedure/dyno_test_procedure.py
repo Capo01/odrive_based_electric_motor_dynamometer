@@ -15,10 +15,12 @@ Example:
 # local source
 from dyno_functions import *
 
-# test procedure
+# Start up. Must be run to find odrives.
 odrive_startup()
-report_motor_parameters()
-write_values(measure_values())
-#no_load_speed_test(odrive)			# Accepted arguments are either absorber_motor_odrive or test_motor_odrive
-#motor_controller_loss_test(odrive)	# Accepted arguments are either absorber_motor_odrive or test_motor_odrive
+
+###### Place your desired dest procedures here #######
+#report_motor_parameters()
+#no_load_speed_test()
+#motor_controller_loss_test()
+test_motor_efficiency_map()
 odrive_shutdown()
