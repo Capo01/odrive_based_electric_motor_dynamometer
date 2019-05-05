@@ -429,16 +429,18 @@ def motor_controller_loss_test():
 def test_motor_efficiency_map():
     """
     Used to produce an efficiency map of the test motor.
-    Test motor set in velocity control mode and its speed incremented.
+    Test motor set in velocity control mode (with speed ramping) and its speed incremented.
     At each speed a fixed torque is placed on the test motor by the absorber.
     After full range of speeds tested, absorber motor torque incremented.
+    Torque is incremented for a given speed rather than the other way around so that the motor
+    is not commanded to a high torque for long periods, generating a lot of heat.
     """
     print('### Starting test motor efficiency mapping ###')
 
     print('Setting test specific parameters...')
     test_motor_odrive_axis.controller.config.control_mode = CTRL_MODE_VELOCITY_CONTROL
     test_motor_odrive_axis.controller.config.vel_limit = rpm_to_cpr(efficiency_speed_max, test_motor_odrive) * 1.5 # 1.5x added to prevent ERROR_OVERSPEED due to load changes on the motor.
-    absorber_motor_odrive_axis.motor.config.current_lim = efficiency_current_max
+    test_motor_odrive_axis.controller.vel_ramp_enable = True
 
     absorber_motor_odrive_axis.controller.config.control_mode = CTRL_MODE_CURRENT_CONTROL
     absorber_motor_odrive_axis.controller.config.vel_limit = rpm_to_cpr(efficiency_speed_max, test_motor_odrive) * 1.5 # 1.5x added to prevent ERROR_OVERSPEED due to load changes on the motor.
@@ -449,13 +451,33 @@ def test_motor_efficiency_map():
 
     for i in range(int(efficiency_speed_max / efficiency_speed_step)):
         set_speed = rpm_to_cpr((i + 1) * efficiency_speed_step, test_motor_odrive) # +1 added so starting speed != 0
-        test_motor_odrive_axis.controller.vel_setpoint = set_speed
-        time.sleep(0.5)
+        test_motor_odrive_axis.controller.vel_ramp_target = set_speed
+        # wait for set_speed to be reached
+        wait_num = 0
+        while test_motor_odrive_axis.encoder.vel_estimate <= (set_speed * 0.98):
+            time.sleep(0.1)
+            wait_num += 1
+            if wait_num == 20: # Let user know if speed is not reached within 2 seconds.
+                print('Waiting for test motor to reach set speed...')
+                time.sleep(1)
+                
         for j in range(int(efficiency_current_max / efficiency_current_step) + 1):
             temp_check() # Check all temperatures are safe.
             set_current = j * efficiency_current_step
             print(str(i) + '.' + str(j), int((set_speed / Test_motor.encoder_cpr) * 60), set_current)
-            absorber_motor_odrive_axis.controller.current_setpoint = set_current
+            
+            # slowly increase or decrease current_setpoint to allow time for test motor PID to adjust.
+            current_difference = set_current - absorber_motor_odrive_axis.controller.current_setpoint
+            while -1 > current_difference > 1: # Only need to increase current slowly if difference > 1 A
+                if current_difference > 0:
+                    absorber_motor_odrive_axis.controller.current_setpoint += 1
+                    time.sleep(0.2)
+                if current_difference < 0:
+                    absorber_motor_odrive_axis.controller.current_setpoint -= 1
+                    time.sleep(0.2)
+                current_difference = set_current - absorber_motor_odrive_axis.controller.current_setpoint
+            absorber_motor_odrive_axis.controller.current_setpoint = set_current # add the remainder, if any.
+
             time.sleep(stabilise_time)
             write_values(measure_values())
             
