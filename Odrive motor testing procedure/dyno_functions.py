@@ -50,16 +50,16 @@ def temp_check():
 
     if all(x >= max_safe_temp for x in (
         motor_temp(absorber_motor_odrive),
-        absorber_motor_odrive.axis0.motor.get_inverter_temp(),
+        absorber_motor_odrive_axis.motor.get_inverter_temp(),
         motor_temp(test_motor_odrive),
-        test_motor_odrive.axis0.motor.get_inverter_temp()
+        test_motor_odrive_axis.motor.get_inverter_temp()
     )):
         emergency_stop_flag = True
         print('Warning: Maximum safe temperature (', max_safe_temp, ' Deg C) exceeded.')
         print('Absorber Motor Temperature (Deg C): ', motor_temp(absorber_motor_odrive) )
-        print('Absorber Odrive MOSFET Temperature (Deg C): ', absorber_motor_odrive.axis0.motor.get_inverter_temp())
+        print('Absorber Odrive MOSFET Temperature (Deg C): ', absorber_motor_odrive_axis.motor.get_inverter_temp())
         print('Test Motor Temperature (Deg C): ', motor_temp(test_motor_odrive) )
-        print('Test Odrive MOSFET Temperature (Deg C): ', test_motor_odrive.axis0.motor.get_inverter_temp())
+        print('Test Odrive MOSFET Temperature (Deg C): ', test_motor_odrive_axis.motor.get_inverter_temp())
         odrive_shutdown()
         exit()
 
@@ -97,6 +97,8 @@ def odrive_startup():
     # Find odrives all required odrives
     global absorber_motor_odrive
     global test_motor_odrive
+    global absorber_motor_odrive_axis
+    global test_motor_odrive_axis
 
     print('### Beginning Odrive startup ###')
     print('Looking for', num_odrives, 'Odrives...')
@@ -106,9 +108,9 @@ def odrive_startup():
     
     if num_odrive_found != num_odrives:
         if odrives[0].serial_number == Test_motor().serial_number:
-            print(num_odrive_found, 'Odrives found. Please connect absorber odrive')
+            print(num_odrive_found, 'Odrives found. Please connect absorber Odrive')
         else:
-            print(num_odrive_found, 'Odrives found. Please connect test odrive')
+            print(num_odrive_found, 'Odrives found. Please connect test Odrive')
         exit()
 
     print('Found', num_odrive_found, 'Odrives.')
@@ -120,10 +122,18 @@ def odrive_startup():
     for odrv in odrives:
         if odrv.serial_number == Test_motor().serial_number:
             test_motor_odrive = odrv
+            if test_motor_axis == 0:
+                test_motor_odrive_axis = test_motor_odrive.axis0
+            else:
+                test_motor_odrive_axis = test_motor_odrive.axis1          
             odrives_assigned += 1
             print('Test motor assigned to serial number', test_motor_odrive.serial_number)
         if odrv.serial_number == Absorber_motor().serial_number:
             absorber_motor_odrive = odrv
+            if absorber_motor_axis == 0:
+                absorber_motor_odrive_axis = absorber_motor_odrive.axis0
+            else:
+                absorber_motor_odrive_axis = absorber_motor_odrive.axis1  
             odrives_assigned += 1
             print('Absorber motor assigned to serial number', absorber_motor_odrive.serial_number)
     
@@ -134,16 +144,16 @@ def odrive_startup():
     # Set Odrive parameters as listed in dyno_parameters.py
     print('Setting parameters...')
     absorber_motor_odrive.config.brake_resistance = Absorber_motor().brake_resistance
-    absorber_motor_odrive.axis0.motor.config.calibration_current = Absorber_motor().calibration_current
-    absorber_motor_odrive.axis0.motor.config.current_lim = Absorber_motor().current_lim
-    absorber_motor_odrive.axis0.motor.config.pole_pairs = Absorber_motor().pole_pairs
-    absorber_motor_odrive.axis0.controller.config.vel_limit = Absorber_motor().vel_limit
+    absorber_motor_odrive_axis.motor.config.calibration_current = Absorber_motor().calibration_current
+    absorber_motor_odrive_axis.motor.config.current_lim = Absorber_motor().current_lim
+    absorber_motor_odrive_axis.motor.config.pole_pairs = Absorber_motor().pole_pairs
+    absorber_motor_odrive_axis.controller.config.vel_limit = Absorber_motor().vel_limit
 
     test_motor_odrive.config.brake_resistance = Test_motor().brake_resistance
-    test_motor_odrive.axis0.motor.config.calibration_current = Test_motor().calibration_current
-    test_motor_odrive.axis0.motor.config.current_lim = Test_motor().current_lim
-    test_motor_odrive.axis0.motor.config.pole_pairs = Test_motor().pole_pairs
-    test_motor_odrive.axis0.controller.config.vel_limit = Test_motor().vel_limit
+    test_motor_odrive_axis.motor.config.calibration_current = Test_motor().calibration_current
+    test_motor_odrive_axis.motor.config.current_lim = Test_motor().current_lim
+    test_motor_odrive_axis.motor.config.pole_pairs = Test_motor().pole_pairs
+    test_motor_odrive_axis.controller.config.vel_limit = Test_motor().vel_limit
     
     print('Setting parameters complete.')
 
@@ -151,22 +161,22 @@ def odrive_startup():
     if calibrate_on_run == True:
         # Calibrate absorber motor and wait for it to finish
         print("Calibrating absorber motor...")
-        absorber_motor_odrive.axis0.requested_state = AXIS_STATE_FULL_CALIBRATION_SEQUENCE
-        while absorber_motor_odrive.axis0.current_state != AXIS_STATE_IDLE:
+        absorber_motor_odrive_axis.requested_state = AXIS_STATE_FULL_CALIBRATION_SEQUENCE
+        while absorber_motor_odrive_axis.current_state != AXIS_STATE_IDLE:
             time.sleep(0.5)
         print("Calibrating absorber motor complete.")
 
         # Calibrate test motor and wait for it to finish
         print("Calibrating test motor...")
-        test_motor_odrive.axis0.requested_state = AXIS_STATE_FULL_CALIBRATION_SEQUENCE
-        while test_motor_odrive.axis0.current_state != AXIS_STATE_IDLE:
+        test_motor_odrive_axis.requested_state = AXIS_STATE_FULL_CALIBRATION_SEQUENCE
+        while test_motor_odrive_axis.current_state != AXIS_STATE_IDLE:
             time.sleep(0.5)
         print("Calibrating absorber motor complete.")
 
     print("Setting closed loop control...")
-    absorber_motor_odrive.axis0.requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL
+    absorber_motor_odrive_axis.requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL
     time.sleep(0.5) # Prevent both motors coming active at once.
-    test_motor_odrive.axis0.requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL
+    test_motor_odrive_axis.requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL
     time.sleep(0.5)
     print("Now in closed loop control")
 
@@ -180,35 +190,35 @@ def odrive_shutdown():
     print("### Shutting down odrives ###")
 
     #Absorber motor and test motor shutdown
-    absorber_motor_odrive.axis0.controller.config.control_mode = CTRL_MODE_VELOCITY_CONTROL
-    test_motor_odrive.axis0.controller.config.control_mode = CTRL_MODE_VELOCITY_CONTROL
-    absorber_motor_odrive.axis0.controller.vel_ramp_enable = True
-    test_motor_odrive.axis0.controller.vel_ramp_enable = True
-    absorber_motor_odrive.axis0.controller.config.vel_ramp_rate = shutdown_ramp_speed
-    test_motor_odrive.axis0.controller.config.vel_ramp_rate = shutdown_ramp_speed
-    absorber_motor_odrive.axis0.controller.vel_ramp_target = 0
-    test_motor_odrive.axis0.controller.vel_ramp_target = 0
+    absorber_motor_odrive_axis.controller.config.control_mode = CTRL_MODE_VELOCITY_CONTROL
+    test_motor_odrive_axis.controller.config.control_mode = CTRL_MODE_VELOCITY_CONTROL
+    absorber_motor_odrive_axis.controller.vel_ramp_enable = True
+    test_motor_odrive_axis.controller.vel_ramp_enable = True
+    absorber_motor_odrive_axis.controller.config.vel_ramp_rate = shutdown_ramp_speed
+    test_motor_odrive_axis.controller.config.vel_ramp_rate = shutdown_ramp_speed
+    absorber_motor_odrive_axis.controller.vel_ramp_target = 0
+    test_motor_odrive_axis.controller.vel_ramp_target = 0
 
     # wait for motors to slow down.
     print("Slowing down motors...")
-    while absorber_motor_odrive.axis0.encoder.vel_estimate and test_motor_odrive.axis0.encoder.vel_estimate != 0:
+    while absorber_motor_odrive_axis.encoder.vel_estimate and test_motor_odrive_axis.encoder.vel_estimate != 0:
         time.sleep(0.5)
     
     print("Motors stopped")
-    absorber_motor_odrive.axis0.controller.vel_ramp_enable = False
-    test_motor_odrive.axis0.controller.vel_ramp_enable = False
+    absorber_motor_odrive_axis.controller.vel_ramp_enable = False
+    test_motor_odrive_axis.controller.vel_ramp_enable = False
 
     # Prevent motors being set to position zero at full speed when set to position control mode.
     print("Setting to position control mode")
-    absorber_motor_odrive.axis0.controller.pos_setpoint = absorber_motor_odrive.axis0.encoder.pos_estimate 
-    test_motor_odrive.axis0.controller.pos_setpoint = absorber_motor_odrive.axis0.encoder.pos_estimate 
-    absorber_motor_odrive.axis0.controller.config.control_mode = CTRL_MODE_POSITION_CONTROL
-    test_motor_odrive.axis0.controller.config.control_mode = CTRL_MODE_POSITION_CONTROL
+    absorber_motor_odrive_axis.controller.pos_setpoint = absorber_motor_odrive_axis.encoder.pos_estimate 
+    test_motor_odrive_axis.controller.pos_setpoint = absorber_motor_odrive_axis.encoder.pos_estimate 
+    absorber_motor_odrive_axis.controller.config.control_mode = CTRL_MODE_POSITION_CONTROL
+    test_motor_odrive_axis.controller.config.control_mode = CTRL_MODE_POSITION_CONTROL
     
     if idle_on_finish == True or emergency_stop_flag == True:
         # Calibrate motor and wait for it to finish
-        absorber_motor_odrive.axis0.requested_state = AXIS_STATE_IDLE
-        test_motor_odrive.axis0.requested_state = AXIS_STATE_IDLE
+        absorber_motor_odrive_axis.requested_state = AXIS_STATE_IDLE
+        test_motor_odrive_axis.requested_state = AXIS_STATE_IDLE
 
     print("### Shut down complete ###")
 
@@ -284,28 +294,28 @@ def report_motor_parameters():
     print("### Reporting motor parameters ###")
     temp_check() # Check all temperatures are safe.
     print("Testing absorber motor...")
-    absorber_motor_odrive.axis0.motor.config.calibration_current = Absorber_motor().calibration_current
-    absorber_motor_odrive.axis0.requested_state = AXIS_STATE_MOTOR_CALIBRATION
-    while absorber_motor_odrive.axis0.current_state != AXIS_STATE_IDLE:
+    absorber_motor_odrive_axis.motor.config.calibration_current = Absorber_motor().calibration_current
+    absorber_motor_odrive_axis.requested_state = AXIS_STATE_MOTOR_CALIBRATION
+    while absorber_motor_odrive_axis.current_state != AXIS_STATE_IDLE:
         time.sleep(0.1)
 
     print("Testing test motor...")
-    test_motor_odrive.axis0.motor.config.calibration_current = Test_motor().calibration_current
-    test_motor_odrive.axis0.requested_state = AXIS_STATE_MOTOR_CALIBRATION
-    while test_motor_odrive.axis0.current_state != AXIS_STATE_IDLE:
+    test_motor_odrive_axis.motor.config.calibration_current = Test_motor().calibration_current
+    test_motor_odrive_axis.requested_state = AXIS_STATE_MOTOR_CALIBRATION
+    while test_motor_odrive_axis.current_state != AXIS_STATE_IDLE:
         time.sleep(0.1)
 
     print("Testing complete...")   
 
-    absorber_motor_resistance = absorber_motor_odrive.axis0.motor.config.phase_resistance
-    absorber_motor_inductance = absorber_motor_odrive.axis0.motor.config.phase_inductance
+    absorber_motor_resistance = absorber_motor_odrive_axis.motor.config.phase_resistance
+    absorber_motor_inductance = absorber_motor_odrive_axis.motor.config.phase_inductance
     absorber_motor_temperature = motor_temp(absorber_motor_odrive)
     print('Absorber motor resistance (Ohm): ', absorber_motor_resistance)
     print('Absorber motor inductance (Henry): ', absorber_motor_inductance)
     print('Absorber motor Temperature (Deg C): ', absorber_motor_temperature)
 
-    test_motor_resistance = test_motor_odrive.axis0.motor.config.phase_resistance
-    test_motor_inductance = test_motor_odrive.axis0.motor.config.phase_inductance
+    test_motor_resistance = test_motor_odrive_axis.motor.config.phase_resistance
+    test_motor_inductance = test_motor_odrive_axis.motor.config.phase_inductance
     test_motor_temperature = motor_temp(test_motor_odrive)
     print('Test motor resistance (Ohm): ', test_motor_resistance)
     print('Test motor inductance (Henry): ', test_motor_inductance)
@@ -412,8 +422,8 @@ def motor_controller_loss_test():
                 x = 1 # Write to file only once per calibration current setting
             time.sleep(0.5)
 
-    absorber_motor_odrive.axis0.motor.config.calibration_current = Absorber_motor.calibration_current # set calibration current back to default value.
-    test_motor_odrive.axis0.motor.config.calibration_current = Test_motor.calibration_current
+    absorber_motor_odrive_axis.motor.config.calibration_current = Absorber_motor.calibration_current # set calibration current back to default value.
+    test_motor_odrive_axis.motor.config.calibration_current = Test_motor.calibration_current
     print('Motor controller loss test complete.')
 
 def test_motor_efficiency_map():
@@ -426,25 +436,26 @@ def test_motor_efficiency_map():
     print('### Starting test motor efficiency mapping ###')
 
     print('Setting test specific parameters...')
-    test_motor_odrive.axis0.controller.config.control_mode = CTRL_MODE_VELOCITY_CONTROL
-    test_motor_odrive.axis0.controller.config.vel_limit = rpm_to_cpr(efficiency_speed_max, test_motor_odrive) * 1.5 # 1.5x added to prevent ERROR_OVERSPEED due to load changes on the motor.
-    absorber_motor_odrive.axis0.motor.config.current_lim = efficiency_current_max
+    test_motor_odrive_axis.controller.config.control_mode = CTRL_MODE_VELOCITY_CONTROL
+    test_motor_odrive_axis.controller.config.vel_limit = rpm_to_cpr(efficiency_speed_max, test_motor_odrive) * 1.5 # 1.5x added to prevent ERROR_OVERSPEED due to load changes on the motor.
+    absorber_motor_odrive_axis.motor.config.current_lim = efficiency_current_max
 
-    absorber_motor_odrive.axis0.controller.config.control_mode = CTRL_MODE_CURRENT_CONTROL
-    absorber_motor_odrive.axis0.controller.config.vel_limit = rpm_to_cpr(efficiency_speed_max, test_motor_odrive) * 1.5 # 1.5x added to prevent ERROR_OVERSPEED due to load changes on the motor.
-    absorber_motor_odrive.axis0.motor.config.current_lim = efficiency_current_max
+    absorber_motor_odrive_axis.controller.config.control_mode = CTRL_MODE_CURRENT_CONTROL
+    absorber_motor_odrive_axis.controller.config.vel_limit = rpm_to_cpr(efficiency_speed_max, test_motor_odrive) * 1.5 # 1.5x added to prevent ERROR_OVERSPEED due to load changes on the motor.
+    absorber_motor_odrive_axis.motor.config.current_lim = efficiency_current_max
     
     print('Starting test motor efficiency test..')
     print('Step No., Test motor speed (RPM), Absorber motor current (A)')
 
     for i in range(int(efficiency_speed_max / efficiency_speed_step)):
         set_speed = rpm_to_cpr((i + 1) * efficiency_speed_step, test_motor_odrive) # +1 added so starting speed != 0
-        test_motor_odrive.axis0.controller.vel_setpoint = set_speed
+        test_motor_odrive_axis.controller.vel_setpoint = set_speed
+        time.sleep(0.5)
         for j in range(int(efficiency_current_max / efficiency_current_step) + 1):
             temp_check() # Check all temperatures are safe.
             set_current = j * efficiency_current_step
             print(str(i) + '.' + str(j), int((set_speed / Test_motor.encoder_cpr) * 60), set_current)
-            absorber_motor_odrive.axis0.controller.current_setpoint = set_current
+            absorber_motor_odrive_axis.controller.current_setpoint = set_current
             time.sleep(stabilise_time)
             write_values(measure_values())
             

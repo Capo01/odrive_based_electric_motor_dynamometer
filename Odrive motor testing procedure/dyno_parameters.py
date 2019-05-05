@@ -14,6 +14,8 @@ TODO
 """
 # General
 num_odrives 							= 2					# Number of odrive that you are using
+test_motor_axis                         = 1                 # The axis which thest motor is connected, either 0 or 1
+absorber_motor_axis                     = 0                 # The axis which the absorber motor is connected, either 0 or 1
 calibrate_on_run						= True 		        # Motors will calibrate when test started if True
 idle_on_finish            				= True              # Motors will become idle at end of all tests
 max_safe_temp               			= 80                # Maximum allowable temperature for motor and MOSFETs [Deg C]
