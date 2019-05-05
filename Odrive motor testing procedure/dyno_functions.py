@@ -427,26 +427,27 @@ def test_motor_efficiency_map():
 
     print('Setting test specific parameters...')
     test_motor_odrive.axis0.controller.config.control_mode = CTRL_MODE_VELOCITY_CONTROL
+    test_motor_odrive.axis0.controller.config.vel_limit = rpm_to_cpr(efficiency_speed_max, test_motor_odrive) * 1.5 # 1.5x added to prevent ERROR_OVERSPEED due to load changes on the motor.
+    absorber_motor_odrive.axis0.motor.config.current_lim = efficiency_current_max
+
     absorber_motor_odrive.axis0.controller.config.control_mode = CTRL_MODE_CURRENT_CONTROL
-    test_motor_odrive.axis0.controller.config.vel_limit = rpm_to_cpr(efficiency_speed_max, test_motor_odrive)
-    absorber_motor_odrive.axis0.controller.config.vel_limit = rpm_to_cpr(efficiency_speed_max, test_motor_odrive)
+    absorber_motor_odrive.axis0.controller.config.vel_limit = rpm_to_cpr(efficiency_speed_max, test_motor_odrive) * 1.5 # 1.5x added to prevent ERROR_OVERSPEED due to load changes on the motor.
     absorber_motor_odrive.axis0.motor.config.current_lim = efficiency_current_max
     
     print('Starting test motor efficiency test..')
     print('Step No., Test motor speed (RPM), Absorber motor current (A)')
 
-    for i in range(int(efficiency_speed_max / efficiency_speed_step) + 1):
-        set_speed = rpm_to_cpr(i * efficiency_speed_step, test_motor_odrive)
+    for i in range(int(efficiency_speed_max / efficiency_speed_step)):
+        set_speed = rpm_to_cpr((i + 1) * efficiency_speed_step, test_motor_odrive) # +1 added so starting speed != 0
         test_motor_odrive.axis0.controller.vel_setpoint = set_speed
-        time.sleep(stabilise_time)
         for j in range(int(efficiency_current_max / efficiency_current_step) + 1):
             temp_check() # Check all temperatures are safe.
             set_current = j * efficiency_current_step
+            print(str(i) + '.' + str(j), int((set_speed / Test_motor.encoder_cpr) * 60), set_current)
             absorber_motor_odrive.axis0.controller.current_setpoint = set_current
             time.sleep(stabilise_time)
             write_values(measure_values())
-            print(str(i) + '.' + str(j), int((set_speed / Test_motor.encoder_cpr) * 60), set_current)
-
+            
     print('### Test motor efficiency mapping complete ###')
 
 # Error due to ERROR_CONTROL_DEADLINE_MISSED. See discord. Try increasing speed and setting same gains.

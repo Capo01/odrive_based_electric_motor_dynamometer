@@ -26,7 +26,7 @@ text_file_name              			= 'odrive_data.csv' # Name of output text file wh
 text_file_name_motor_param				= 'motor_param.csv'	# Contains each motors fixed inductance and resistance values
 file_header_flag            			= True 	            # Set False to exclude the file header (name and unit at start of file)
 erase_file_on_startup_flag  			= True              # Set True to erase text file at the start of each run or between tests
-stabilise_time              			= 1                 # Time elapsed after setting parameters before measuring values [s]
+stabilise_time              			= 2                 # Time elapsed after setting parameters before measuring values [s]
 num_readings                			= 10                # Number of readings to be averaged
 sleep_time                  			= 0.01              # Wait time between readings. Arduino Mega only outputs a reading every 10 ms [s]
 
@@ -52,16 +52,16 @@ loss_est_max_motor_temp                 = 30                # Maximum motor temp
 
 # Test motor efficiency test
 efficiency_speed_step                   = 100               # Test motor speed incriment size [RPM]
-efficiency_speed_max                    = 500               # Test motor maximum speed to be tested [RPM]
+efficiency_speed_max                    = 1000               # Test motor maximum speed to be tested [RPM]
 efficiency_current_step                 = 5                 # Absorber current incriment size. Determines torque steps [A]
-efficiency_current_max                  = 15                # Absorber current maximum. Determines maximum torque [A]
+efficiency_current_max                  = 25                # Absorber current maximum. Determines maximum torque [A]
 
 # Absorber motor Odrive
 class Absorber_motor:
 	serial_number 						= 35795122466891	# Unique serial number of odrive to be used. Can be found using Odrivetool 'odrv0.serial_number'
-	brake_resistance       				= 0.47				# Default = 0.5 [Ohm] Resistance of the brake resistor connected to test motor odrive
-	calibration_current					= 30				# Default = 10 [A]  Current used during motor calibration
-	current_lim 						= 10				# Default = 10 [A] Peak current supplied to the motor when in use
+	brake_resistance       				= 0.5				# Default = 0.5 [Ohm] Resistance of the brake resistor connected to test motor odrive
+	calibration_current					= 20				# Default = 10 [A]  Current used during motor calibration
+	current_lim 						= 60				# Default = 10 [A] Peak current supplied to the motor when in use
 	pole_pairs							= 7					# Default = 7 [pole pairs]	Number of pole pairs. Count number of magnets and divide by 2
 	vel_limit							= 20000				# Default = 20000 [counts/s] Maximum motor speed	
 	encoder_cpr                 		= 8192              # Default = 8192 [CPR] Encoder counts per rotation 	
@@ -70,8 +70,8 @@ class Absorber_motor:
 class Test_motor:
 	serial_number 						= 53237081453109	# Unique serial number of odrive to be used. Can be found using Odrivetool 'odrv0.serial_number'		
 	brake_resistance       				= 0.47				# Default = 0.5 [Ohm] Resistance of the brake resistor connected to test motor odrive
-	calibration_current					= 30				# Default = 10 [A]  Current used during motor calibration
-	current_lim 						= 10				# Default = 10 [A] Peak current supplied to the motor when in use
+	calibration_current					= 20				# Default = 10 [A]  Current used during motor calibration
+	current_lim 						= 60				# Default = 10 [A] Peak current supplied to the motor when in use
 	pole_pairs							= 7					# Default = 7 [pole pairs]	Number of pole pairs. Count number of magnets and divide by 2
 	vel_limit							= 20000				# Default = 20000 [counts/s] Maximum motor speed
 	encoder_cpr                 		= 8192              # Default = 8192 [CPR] Encoder counts per rotation 	 
