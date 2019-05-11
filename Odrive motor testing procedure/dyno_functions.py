@@ -5,10 +5,7 @@ Odrive electric motor dynamometer function module.
 https://github.com/Capo01/MotorDyno
 R. Parsons
 
-Example:
-    odrive_startup()
-    no_load_max_speed(500, 100)
-    odrive_shutdown()
+
 """
 
 # 3rd party packages
@@ -148,12 +145,14 @@ def odrive_startup():
     absorber_motor_odrive_axis.motor.config.current_lim = Absorber_motor().current_lim
     absorber_motor_odrive_axis.motor.config.pole_pairs = Absorber_motor().pole_pairs
     absorber_motor_odrive_axis.controller.config.vel_limit = Absorber_motor().vel_limit
+    absorber_motor_odrive_axis.controller.config.vel_limit_tolerance = Absorber_motor().vel_limit_tolerance
 
     test_motor_odrive.config.brake_resistance = Test_motor().brake_resistance
     test_motor_odrive_axis.motor.config.calibration_current = Test_motor().calibration_current
     test_motor_odrive_axis.motor.config.current_lim = Test_motor().current_lim
     test_motor_odrive_axis.motor.config.pole_pairs = Test_motor().pole_pairs
     test_motor_odrive_axis.controller.config.vel_limit = Test_motor().vel_limit
+    test_motor_odrive_axis.controller.config.vel_limit_tolerance = Test_motor().vel_limit_tolerance
     
     print('Setting parameters complete.')
 
@@ -483,4 +482,4 @@ def test_motor_efficiency_map():
             
     print('### Test motor efficiency mapping complete ###')
 
-# Error due to ERROR_CONTROL_DEADLINE_MISSED. See discord. Try increasing speed and setting same gains.
+

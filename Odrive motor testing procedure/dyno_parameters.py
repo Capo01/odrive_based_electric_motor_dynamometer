@@ -7,9 +7,7 @@ https://github.com/Capo01/MotorDyno
 R. Parsons
 
 TODO
--> add Ibus to test list.
--> Motor efficiency test function
--> Have temp_check() check that a thermistor is properly connected.
+-> Update dyno_param file and way that data is recorded so that axis assignment is automatic.
 
 """
 # General
@@ -54,9 +52,9 @@ loss_est_max_motor_temp                 = 30                # Maximum motor temp
 
 # Test motor efficiency test
 efficiency_speed_step                   = 100               # Test motor speed incriment size [RPM]
-efficiency_speed_max                    = 1000               # Test motor maximum speed to be tested [RPM]
-efficiency_current_step                 = 5                 # Absorber current incriment size. Determines torque steps [A]
-efficiency_current_max                  = 25                # Absorber current maximum. Determines maximum torque [A]
+efficiency_speed_max                    = 5000               # Test motor maximum speed to be tested [RPM]
+efficiency_current_step                 = 3                 # Absorber current incriment size. Determines torque steps [A]
+efficiency_current_max                  = 24               # Absorber current maximum. Determines maximum torque [A]
 
 # Absorber motor Odrive
 class Absorber_motor:
@@ -67,7 +65,8 @@ class Absorber_motor:
     pole_pairs                          = 7                 # Default = 7 [pole pairs]  Number of pole pairs. Count number of magnets and divide by 2
     vel_limit                           = 20000             # Default = 20000 [counts/s] Maximum motor speed    
     encoder_cpr                         = 8192              # Default = 8192 [CPR] Encoder counts per rotation
-    vel_ramp_rate                       = 30000             # Default = 0 [CPR/S/S] Maximum speed change when in ramp mode      
+    vel_ramp_rate                       = 30000             # Default = 0 [CPR/S/S] Maximum speed change when in ramp mode
+    vel_limit_tolerance                 = 2                 # Defualt = 1.2 [multiplier] Maximum amount vel_limit can be exceeded before error is tripped      
 
 # Test motor Odrive
 class Test_motor:
@@ -78,7 +77,8 @@ class Test_motor:
     pole_pairs                          = 7                 # Default = 7 [pole pairs]  Number of pole pairs. Count number of magnets and divide by 2
     vel_limit                           = 20000             # Default = 20000 [counts/s] Maximum motor speed
     encoder_cpr                         = 8192              # Default = 8192 [CPR] Encoder counts per rotation
-    vel_ramp_rate                       = 30000             # Default = 0 [CPR/S/S] Maximum speed change when in ramp mode   
+    vel_ramp_rate                       = 30000             # Default = 0 [CPR/S/S] Maximum speed change when in ramp mode
+    vel_limit_tolerance                 = 2                 # Defualt = 1.2 [multiplier] Maximum amount vel_limit can be exceeded before error is tripped   
 
 """
 Test motor and motor controller measurement list.
@@ -117,27 +117,27 @@ measurement_list = [
 {
     'name'      :   'Test motor FET temp',
     'unit'      :   'Deg C',
-    'location'  :   '(test_motor_odrive.axis0.motor.get_inverter_temp())',
+    'location'  :   '(test_motor_odrive.axis1.motor.get_inverter_temp())',
 },
 {
     'name'      :   'Test motor q-axis current',
     'unit'      :   'A',
-    'location'  :   '(test_motor_odrive.axis0.motor.current_control.Iq_measured)',
+    'location'  :   '(test_motor_odrive.axis1.motor.current_control.Iq_measured)',
 },
 {
     'name'      :   'Test motor d-axis current',
     'unit'      :   'A',
-    'location'  :   '(test_motor_odrive.axis0.motor.current_control.Id_measured)',
+    'location'  :   '(test_motor_odrive.axis1.motor.current_control.Id_measured)',
 },
 {
     'name'      :   'Test motor Ibus',
     'unit'      :   'A',
-    'location'  :   '(test_motor_odrive.axis0.motor.current_control.Ibus)',
+    'location'  :   '(test_motor_odrive.axis1.motor.current_control.Ibus)',
 },
 {
     'name'      :   'Test motor Ical',
     'unit'      :   'A',
-    'location'  :   '(test_motor_odrive.axis0.motor.config.calibration_current)',
+    'location'  :   '(test_motor_odrive.axis1.motor.config.calibration_current)',
 },
 {
     'name'      :   'Output Torque',
@@ -151,8 +151,8 @@ measurement_list = [
 },
 {
     'name'      :   'Output Speed set-point',
-    'unit'      :   '%',
-    'location'  :   '(absorber_motor_odrive.axis0.controller.vel_setpoint)',
+    'unit'      :   'rad.s',
+    'location'  :   '((test_motor_odrive.axis1.controller.vel_setpoint / 8192) * 2 * math.pi)',
 },
 {
     'name'      :   'Output Power',
