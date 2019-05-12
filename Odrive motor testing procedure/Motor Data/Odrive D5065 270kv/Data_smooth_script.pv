@@ -1,0 +1,25 @@
+import numpy as np
+from scipy.ndimage.filters import gaussian_filter
+from matplotlib.pyplot import contour, show
+from io import StringIO
+
+sigma = 0 # this depends on how noisy your data is, play with it!
+data = np.loadtxt('data.txt')
+
+x =[]
+y =[]
+z =[]
+
+i = 0
+for i in range(len(data)):
+	x.append(data[i][0])
+	y.append(data[i][1])
+	# z.append(data[i][2])
+	i += 1
+
+xx, yy = np.meshgrid(x, y)
+z = np.sin(xx + yy**2)
+
+# data = gaussian_filter(data, sigma)
+contour(x, y, z)
+show()
