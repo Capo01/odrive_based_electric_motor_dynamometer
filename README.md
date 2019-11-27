@@ -17,4 +17,6 @@ An open source four-quadrant brushless electric motor dynamometer based on the [
 ## Design 
 The motor under test is connected by a shaft coupler directly to a D6374 sized motor which is used as an absorber. The absorber motor provideds a breaking toque or driving torque when testing generating performance of the test motor. Torque is measured by a load cell which is attached to the frame of the absorber motor by a pivot arm. Power draw is estimated by current shunt and bus voltage which is monitored by a secondary microcontroller. All control is handeled by the Odrive motor controller using a python script which outputs a text file with all the measurment results.
 
+See [this album](https://photos.app.goo.gl/ma1DWoY4Qa5PH14DA) for more images of the test bench.
+
 ## Preliminary results
