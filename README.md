@@ -7,7 +7,7 @@ An open source four-quadrant brushless electric motor dynamometer based on the [
 **Project status**: On hold until the end of 2019 due to other commitments.
 
 ## Features
-* Designed to test motors from 50 to 2000 W over 0 to 7500 RPM with a peak breaking torque of 3.5 N.m
+* Designed to test motors from 50 to 2000 W over 0 to 7500 RPM with a peak braking torque of 3.5 N.m
 * Different sized motors can be accommodated through the use of different absorber motors
 * Can map motor efficiency and power loss for both motoring and generating (four quadrant operation)
 * Can measure static torque and therefore torque constant and motor constant.
